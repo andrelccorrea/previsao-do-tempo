@@ -1,0 +1,7 @@
+main.prg
+previsao_do_tempo.prg
+
+-i hbclass.ch
+-i hbwin.ch
+
+-lhbwin

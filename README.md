@@ -1,2 +1,2 @@
-# harbour-weather-forecast
-Weather forecast tool made in Harbour
+# previsao-do-tempo
+Previsão do tempo utilizando dados do CPTEC/INPE.
