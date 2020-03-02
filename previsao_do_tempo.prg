@@ -1,9 +1,10 @@
 CLASS previsao_do_tempo
 
 	EXPORTED:
-		METHOD obter_previsao_por_cidade( nome_da_cidade )
+		METHOD exibir_previsao_por_cidade( nome_da_cidade )	
 	
 	HIDDEN:
+		METHOD obter_previsao_por_cidade( nome_da_cidade )
 		METHOD obter_codigo_da_cidade( nome_da_cidade )
 		METHOD converter_sigla_em_previsao()
 
@@ -12,35 +13,69 @@ ENDCLASS
 METHOD obter_previsao_por_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 
 	LOCAL codigo_da_cidade
-	LOCAL previsao_completa
-	LOCAL http
-	LOCAL xml
+	LOCAL previsao_xml
+	LOCAL http, xml, erro
 	
 	http := win_OleCreateObject( "MSXML2.ServerXMLHTTP.6.0" )
 	xml := win_OleCreateObject( "MSXML2.DOMDocument.6.0" )
 	
 	codigo_da_cidade := ::obter_codigo_da_cidade( nome_da_cidade )
-
-	http:Open( "GET", "http://servicos.cptec.inpe.br/XML/cidade/7dias/" + codigo_da_cidade + "/previsao.xml", .F. )
 	
-	http:send()
-	
-	xml:loadXML( http:responseText )
-
-	IF xml:parseError:errorCode != 0
-		? "Erro ao ler o XML"
-		? xml:parseError:reason
-	ELSE
-		previsao_completa := xml:xml
+	IF !Empty( codigo_da_cidade )
+		// TRY
+			http:Open( "GET", "http://servicos.cptec.inpe.br/XML/cidade/7dias/" + codigo_da_cidade + "/previsao.xml", .F. )
+		
+			http:send()
+			
+			xml:loadXML( http:responseText )
+		
+			IF xml:parseError:errorCode != 0
+				? "Erro ao ler o XML."
+				? xml:parseError:reason
+			ELSE
+				previsao_xml := xml:xml
+			ENDIF
+		// CATCH erro
+		// 	? "Erro ao consultar a previsão."
+		// 	? erro:cDescription
+		// END
 	ENDIF
 
-RETURN previsao_completa
+RETURN previsao_xml
+
+METHOD exibir_previsao_por_cidade( nome_da_cidade ) CLASS previsao_do_tempo
+
+	LOCAL previsao_xml := ::obter_previsao_por_cidade( nome_da_cidade )
+	LOCAL xml := win_OleCreateObject( "MSXML2.DOMDocument.6.0" )
+	LOCAL cidade, uf, atualizacao, previsoes, lista_de_elementos
+	LOCAL elemento, elemento
+
+	IF !Empty( previsao_xml )
+
+		xml:loadXML( previsao_xml )
+		cidade := xml:selectSingleNode("//nome"):text
+		uf := xml:selectSingleNode("//uf"):text
+		atualizacao := xml:selectSingleNode("//atualizacao"):text
+
+		lista_de_elementos := xml:documentElement:childNodes;
+
+		FOR EACH elemento IN lista_de_elementos
+			IF elemento:hasChild
+				
+			ELSE
+			
+			ENDIF			
+			? elemento:xml
+		NEXT
+
+	ENDIF
+
+RETURN nil
 
 METHOD obter_codigo_da_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 	
 	LOCAL codigo_da_cidade
-	LOCAL http
-	LOCAL xml
+	LOCAL http, xml
 	
 	http := win_OleCreateObject( "MSXML2.ServerXMLHTTP.6.0" )
 	xml := win_OleCreateObject( "MSXML2.DOMDocument.6.0" )
