@@ -14,31 +14,24 @@ METHOD obter_previsao_por_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 
 	LOCAL codigo_da_cidade
 	LOCAL previsao_xml
-	LOCAL http, xml, erro
-	
-	http := win_OleCreateObject( "MSXML2.ServerXMLHTTP.6.0" )
-	xml := win_OleCreateObject( "MSXML2.DOMDocument.6.0" )
+	LOCAL servidor_http := win_OleCreateObject( "MSXML2.ServerXMLHTTP.6.0" )
+	LOCAL xml_dom := win_OleCreateObject( "MSXML2.DOMDocument.6.0" )
 	
 	codigo_da_cidade := ::obter_codigo_da_cidade( nome_da_cidade )
 	
 	IF !Empty( codigo_da_cidade )
-		// TRY
-			http:Open( "GET", "http://servicos.cptec.inpe.br/XML/cidade/7dias/" + codigo_da_cidade + "/previsao.xml", .F. )
+		servidor_http:Open( "GET", "http://servicos.cptec.inpe.br/XML/cidade/7dias/" + codigo_da_cidade + "/previsao.xml", .F. )
+	
+		servidor_http:send()
 		
-			http:send()
-			
-			xml:loadXML( http:responseText )
-		
-			IF xml:parseError:errorCode != 0
-				? "Erro ao ler o XML."
-				? xml:parseError:reason
-			ELSE
-				previsao_xml := xml:xml
-			ENDIF
-		// CATCH erro
-		// 	? "Erro ao consultar a previsão."
-		// 	? erro:cDescription
-		// END
+		xml_dom:loadXML( servidor_http:responseText )
+	
+		IF xml_dom:parseError:errorCode != 0
+			? "Erro ao ler o XML."
+			? xml_dom:parseError:reason
+		ELSE
+			previsao_xml := xml_dom:xml
+		ENDIF
 	ENDIF
 
 RETURN previsao_xml
@@ -46,26 +39,25 @@ RETURN previsao_xml
 METHOD exibir_previsao_por_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 
 	LOCAL previsao_xml := ::obter_previsao_por_cidade( nome_da_cidade )
-	LOCAL xml := win_OleCreateObject( "MSXML2.DOMDocument.6.0" )
-	LOCAL cidade, uf, atualizacao, previsoes, lista_de_elementos
-	LOCAL elemento, elemento
+	LOCAL xml_dom := win_OleCreateObject( "MSXML2.DOMDocument.6.0" )
+	LOCAL cidade, uf, atualizacao, lista_de_previsoes, previsao, elemento
 
 	IF !Empty( previsao_xml )
 
-		xml:loadXML( previsao_xml )
-		cidade := xml:selectSingleNode("//nome"):text
-		uf := xml:selectSingleNode("//uf"):text
-		atualizacao := xml:selectSingleNode("//atualizacao"):text
+		xml_dom:loadXML( previsao_xml )
+		cidade := xml_dom:selectSingleNode( "//nome" ):text
+		uf := xml_dom:selectSingleNode( "//uf" ):text
+		atualizacao := xml_dom:selectSingleNode( "//atualizacao" ):text
 
-		lista_de_elementos := xml:documentElement:childNodes;
+		? "Previsao do tempo para " + cidade + " - " + uf
+		? "Atualizada em " + DToC( SToD( StrTran( atualizacao, "-" ) ) )
+		?
 
-		FOR EACH elemento IN lista_de_elementos
-			IF elemento:hasChild
-				
-			ELSE
-			
-			ENDIF			
-			? elemento:xml
+		lista_de_previsoes := xml_dom:getElementsByTagName( "previsao" )
+
+		FOR EACH previsao IN lista_de_previsoes
+			? previsao:xml
+			? previsao:text
 		NEXT
 
 	ENDIF
