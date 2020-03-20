@@ -1,2 +1,2 @@
 # previsao-do-tempo
-Previsão do tempo utilizando dados do CPTEC/INPE.
+Previsão do tempo feita em Harbour, utilizando dados do CPTEC/INPE.
