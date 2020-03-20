@@ -1,7 +1,7 @@
 CLASS previsao_do_tempo
 
 	EXPORTED:
-		METHOD exibir_previsao_por_cidade( nome_da_cidade )	
+		METHOD exibir_previsao_por_cidade( nome_da_cidade )
 	
 	HIDDEN:
 		METHOD obter_previsao_por_cidade( nome_da_cidade )
@@ -20,6 +20,7 @@ METHOD obter_previsao_por_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 	codigo_da_cidade := ::obter_codigo_da_cidade( nome_da_cidade )
 	
 	IF !Empty( codigo_da_cidade )
+
 		servidor_http:Open( "GET", "http://servicos.cptec.inpe.br/XML/cidade/7dias/" + codigo_da_cidade + "/previsao.xml", .F. )
 	
 		servidor_http:send()
@@ -88,7 +89,7 @@ METHOD exibir_previsao_por_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 		NEXT
 	ENDIF
 
-RETURN nil
+RETURN Nil
 
 METHOD obter_codigo_da_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 	
@@ -101,7 +102,12 @@ METHOD obter_codigo_da_cidade( nome_da_cidade ) CLASS previsao_do_tempo
 	http:Open( "GET", "http://servicos.cptec.inpe.br/XML/listaCidades?city=" + nome_da_cidade, .F. )
 	
 	http:send()
-	
+
+	IF !"<id>" $ http:responseText
+		? "Nome da cidade nao encontrado!"
+		RETURN 	Nil
+	ENDIF
+
 	xml:loadXML( http:responseText )
 
 	IF xml:parseError:errorCode != 0
